@@ -13,16 +13,21 @@ class ButtonHandler:
         await query.answer()
         message = query.message
 
+        if query.data == "toggle_crop_setting":
+            await self.toggle_crop_setting(update, context)
+        elif query.data == "back_to_main_menu":
+            await self.bot.command_handler.start(update, context)
+
         if query.data == "send_background":
             self.bot.expected_type = 'background'
             reply_markup = self.bot.create_main_menu_button()
-            await message.edit_text("Пожалуйста, отправьте ZIP архив с фонами или изображения (форматы: PNG, JPG).",
+            await message.edit_text("Отправьте ZIP архив с фонами или изображения (сжатый формат).",
                                     reply_markup=reply_markup)
 
         elif query.data == "send_overlay":
             self.bot.expected_type = 'overlay'
             reply_markup = self.bot.create_main_menu_button()
-            await message.edit_text("Пожалуйста, отправьте ZIP архив с шаблонами или изображения (форматы: PNG, JPG).",
+            await message.edit_text("Отправьте ZIP архив с шаблонами или изображения (форматы: PNG без сжатия)\n*Шаблон должен быть с прозрачным фоном",
                                     reply_markup=reply_markup)
 
         elif query.data == "generate_images":
@@ -60,3 +65,11 @@ class ButtonHandler:
 
         elif query.data == "input_sets_count":
             await message.edit_text("Введите количество наборов для генерации:")
+
+    async def toggle_crop_setting(self, update: Update, context: CallbackContext):
+            current_setting = self.bot.settings.should_crop_to_9_16()
+            new_setting = not current_setting
+            self.bot.settings.set_crop_to_9_16(new_setting)
+
+            status = "включена" if new_setting else "выключена"
+            await update.callback_query.edit_message_text(f"Обрезка до 9:16 {status}.")

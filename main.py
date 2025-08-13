@@ -15,10 +15,23 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class SettingsManager:
+    def __init__(self):
+        self.crop_to_9_16 = False  # По умолчанию обрезка отключена
+
+    def set_crop_to_9_16(self, value):
+        self.crop_to_9_16 = value
+
+    def should_crop_to_9_16(self):
+        return self.crop_to_9_16
+
+
 class AutoCreoBot:
     def __init__(self, token: str):
         self.application = Application.builder().token(token).build()
-        self.image_manager = ImageManager()
+        self.settings = SettingsManager()
+        self.image_manager = ImageManager(self.settings)
+
         self.expected_type = None
         self.generated_sets_count = 0
         self.message_handler = MessageHandlerClass(self)
@@ -35,7 +48,10 @@ class AutoCreoBot:
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.message_handler.handle_sets_count))
 
     def create_main_menu_button(self):
-        keyboard = [[InlineKeyboardButton("Вернуться в главное меню", callback_data="back_to_main_menu")]]
+        keyboard = [
+            [InlineKeyboardButton("Вернуться в главное меню", callback_data="back_to_main_menu")],
+            [InlineKeyboardButton("Обрезать до 9:16", callback_data="toggle_crop_setting")]  # Добавьте это
+        ]
         return InlineKeyboardMarkup(keyboard)
 
     async def start_command(self, update: Update, context: CallbackContext):
@@ -113,6 +129,9 @@ class AutoCreoBot:
 
     def run(self):
         self.application.run_polling()
+
+
+
 
 
 if __name__ == "__main__":
